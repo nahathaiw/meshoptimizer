@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Resolve every path relative to this script so the command works from any
+# current working directory and never depends on a developer's home path.
+sample_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+
+if (( $# < 1 || $# > 2 )); then
+    printf 'Usage: %s INPUT.ply [--no-optimize]\n' "$0" >&2
+    exit 2
+fi
+
+input=$1
+mode=${2:---optimize}
+if [[ ! -f "$input" ]]; then
+    printf 'Error: input file does not exist: %s\n' "$input" >&2
+    exit 2
+fi
+if [[ "$mode" != "--optimize" && "$mode" != "--no-optimize" ]]; then
+    printf 'Error: mode must be --optimize or --no-optimize\n' >&2
+    exit 2
+fi
+
+build_dir="$sample_dir/build"
+output_dir="$sample_dir/output"
+results_dir="$sample_dir/results"
+mkdir -p "$build_dir" "$output_dir" "$results_dir"
+
+# A matching before/after checksum proves that the runner did not alter the
+# original PLY. The codec's losslessness is validated separately by the C++
+# program with full byte-for-byte comparisons of decoded buffers.
+sha256sum "$input" > "$results_dir/input_checksum_before.txt"
+
+cmake -S "$sample_dir" -B "$build_dir" -DCMAKE_BUILD_TYPE=Release
+cmake --build "$build_dir" --config Release --parallel
+
+"$build_dir/hotdog_lossless" "$input" "$output_dir" "$results_dir" "$mode" | tee "$results_dir/console.txt"
+
+sha256sum "$input" > "$results_dir/input_checksum_after.txt"
+before=$(cut -d' ' -f1 "$results_dir/input_checksum_before.txt")
+after=$(cut -d' ' -f1 "$results_dir/input_checksum_after.txt")
+if [[ "$before" != "$after" ]]; then
+    printf 'Input checksum validation: FAIL\n' | tee -a "$results_dir/console.txt" >&2
+    exit 1
+fi
+
+printf 'Input checksum validation: PASS (%s)\n' "$after" | tee -a "$results_dir/console.txt"
