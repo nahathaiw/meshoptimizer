@@ -329,6 +329,8 @@ Check that generated files did not enter version control:
 git status --short
 ```
 
+The recorded independent-checkout reproduction is available in [`CLEAN-ENVIRONMENT.md`](./CLEAN-ENVIRONMENT.md).
+
 ## Troubleshooting
 
 - **Input does not exist:** pass an existing absolute or repository-relative path.
