@@ -8,6 +8,44 @@ The library provides a C and C++ interface for all algorithms; you can use it fr
 
 Two companion projects are developed and distributed alongside the library: [gltfpack](./gltf/README.md), a command-line tool that automatically optimizes glTF files, and [clusterlod.h](./demo/clusterlod.h), a single-header C/C++ library for continuous level of detail using clustered simplification.
 
+## Lossless HOTDOG sample
+
+The `sample` branch includes a complete, commented example under [`SAMPLE-test/`](./SAMPLE-test/README.md). It loads the included binary PLY, encodes vertex and index streams without quantization, saves and reads the encoded files, decodes them, and validates the result using both strict C++ byte comparisons and an independent Python/Trimesh check.
+
+### Quick start
+
+```bash
+git clone --branch sample https://github.com/nahathaiw/meshoptimizer.git
+cd meshoptimizer
+./SAMPLE-test/run.sh
+```
+
+The HOTDOG test file is already included. The first run builds the C++ sample and creates an isolated Python environment containing the pinned NumPy and Trimesh versions.
+
+Successful output includes:
+
+```text
+OVERALL STRICT LOSSLESS RESULT: PASS
+Overall Trimesh validation    : PASS
+Original input unchanged: PASS
+```
+
+Verified HOTDOG result:
+
+| Measurement | Value |
+|---|---:|
+| Vertices | 501,225 |
+| Faces | 1,002,315 |
+| Indices | 3,006,945 |
+| Raw vertex and index bytes | 20,047,380 |
+| Encoded bytes | 11,213,051 |
+| Encoded/raw | 55.93% |
+| Space saved | 44.07% |
+
+The C++ validator confirms that every decoded vertex and index byte matches the buffers passed to the encoders. The separate Trimesh validator confirms exact positions, RGBA colors, oriented triangles, bounds, surface area, and volume. The input checksum is checked before and after execution.
+
+See the [sample README](./SAMPLE-test/README.md) for requirements, supported PLY layout, manual build commands, generated files, validation details, and troubleshooting.
+
 ## Installing
 
 meshoptimizer is hosted on GitHub; you can download the latest release using git:
