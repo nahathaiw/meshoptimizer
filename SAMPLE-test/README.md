@@ -21,11 +21,23 @@ cd meshoptimizer
 Success ends with:
 
 ```text
-overall_strict_lossless=PASS
-Input checksum validation: PASS
+OVERALL STRICT LOSSLESS RESULT: PASS
+Original input unchanged: PASS
+All checks passed.
 ```
 
 That command automatically builds the sample, encodes HOTDOG, reads and decodes the stored streams, validates every decoded vertex and index byte, and confirms the input checksum did not change.
+
+The console groups the result into four readable sections:
+
+```text
+1. INPUT       mesh counts, vertex format, quantization, optimization
+2. ENCODE      raw bytes, encoded bytes, ratio, and space saved
+3. DECODE      decoder result and return code for each stream
+4. VALIDATION  counts, exact bytes, geometry, and final lossless result
+```
+
+Detailed build output is saved in `SAMPLE-test/results/build.log` instead of hiding the experiment result in compiler messages.
 
 Useful alternatives:
 
@@ -304,6 +316,7 @@ SAMPLE-test/output/
 └── hotdog.index.decoded.bin
 
 SAMPLE-test/results/
+├── build.log
 ├── console.txt
 ├── report.txt
 ├── validation.txt

@@ -349,6 +349,43 @@ int main(int argc, char** argv)
     const size_t raw_bytes = vertex_bytes + index_bytes;
     const size_t encoded_bytes = stored_vertices.size() + stored_indices.size();
     const double ratio = raw_bytes ? 100.0 * double(encoded_bytes) / double(raw_bytes) : 0.0;
+    const double saved = 100.0 - ratio;
+
+    // Keep the terminal output friendly for people running the example. The
+    // report below remains key=value text for scripts and automated checks.
+    std::cout.setf(std::ios::fixed);
+    std::cout.precision(2);
+    std::cout << "\n============================================================\n"
+              << "  Meshoptimizer HOTDOG lossless round trip\n"
+              << "============================================================\n\n"
+              << "1. INPUT\n"
+              << "   File          : " << input_path << "\n"
+              << "   Vertices      : " << source.vertices.size() << "\n"
+              << "   Faces         : " << source.indices.size() / 3 << "\n"
+              << "   Indices       : " << source.indices.size() << "\n"
+              << "   Vertex format : float32 XYZ + uint8 RGBA\n"
+              << "   Quantization  : NO\n"
+              << "   Optimization  : " << (mode == "--optimize" ? "vertex-cache triangle reorder" : "none") << "\n\n"
+              << "2. ENCODE\n"
+              << "   Stream       Raw bytes       Encoded bytes\n"
+              << "   Vertex       " << vertex_bytes << "         " << stored_vertices.size() << "\n"
+              << "   Index        " << index_bytes << "        " << stored_indices.size() << "\n"
+              << "   Combined     " << raw_bytes << "        " << encoded_bytes << "\n"
+              << "   Encoded/raw   : " << ratio << "%\n"
+              << "   Space saved   : " << saved << "%\n\n"
+              << "3. DECODE\n"
+              << "   Vertex stream : " << passFail(vertex_status_ok) << " (return code " << vertex_decode_status << ")\n"
+              << "   Index stream  : " << passFail(index_status_ok) << " (return code " << index_decode_status << ")\n\n"
+              << "4. VALIDATION\n"
+              << "   Vertex count unchanged       : " << passFail(vertex_count_equal) << "\n"
+              << "   Face count unchanged         : " << passFail(face_count_equal) << "\n"
+              << "   Index count unchanged        : " << passFail(index_count_equal) << "\n"
+              << "   Every vertex byte identical  : " << passFail(vertex_bytes_equal) << "\n"
+              << "   Every index byte identical   : " << passFail(index_bytes_equal) << "\n"
+              << "   Geometry unchanged           : " << passFail(geometry_equal) << "\n\n"
+              << "------------------------------------------------------------\n"
+              << "  OVERALL STRICT LOSSLESS RESULT: " << passFail(all_pass) << "\n"
+              << "------------------------------------------------------------\n";
 
     std::ostringstream report;
     report.setf(std::ios::fixed);
@@ -380,7 +417,6 @@ int main(int argc, char** argv)
            << "overall_strict_lossless=" << passFail(all_pass) << "\n";
 
     const std::string report_text = report.str();
-    std::cout << report_text;
     if (!writeBinary(results_dir + "/report.txt", report_text.data(), report_text.size()))
     {
         std::cerr << "Writing report failed\n";
