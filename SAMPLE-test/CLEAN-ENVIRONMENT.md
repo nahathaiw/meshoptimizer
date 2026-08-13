@@ -5,11 +5,11 @@
 ```text
 Verification date: 2026-08-12
 Branch: sample
-Verified commit: f0688425
+Verified commit: f6530794
 Clean-checkout result: PASS
 ```
 
-The sample was reproduced from an independent clone in a newly created `/tmp` directory. No build, output, result, or input file was copied from the development checkout. The original HOTDOG PLY was supplied as an external read-only test input.
+The sample was reproduced from an independent clone in a newly created `/tmp` directory. No build, output, or result file was copied from the development checkout. The committed `SAMPLE-test/input/hotdog.ply` was the only test input, so the documented no-argument command could be verified exactly as a new user would run it.
 
 This was a **clean Git checkout on the same host operating system and toolchain**, not a fresh operating-system container. Docker, Podman, and nerdctl were unavailable. This limitation is stated explicitly so the result is not presented as stronger isolation than was actually tested.
 
@@ -39,18 +39,22 @@ The checkout initially reported no Git changes:
 git -C "$clean_root/repo" status --short
 ```
 
-The original repository tests were run:
+The committed input checksum was checked:
+
+```bash
+sha256sum "$clean_root/repo/SAMPLE-test/input/hotdog.ply"
+```
+
+The original repository tests were run during the initial clean-checkout verification:
 
 ```bash
 make -C "$clean_root/repo" check
 ```
 
-The documented sample command was then run with the external input:
+After the input was added, the documented no-argument command was run from a second independent clone:
 
 ```bash
-"$clean_root/repo/SAMPLE-test/run.sh" \
-  /tmp/meshoptimizer-before-sample-20260812/demo/hotdog.ply \
-  --optimize
+"$clean_root/repo/SAMPLE-test/run.sh"
 ```
 
 Finally, Git status was checked again:
@@ -77,6 +81,7 @@ It remained empty because all generated build, encoded, decoded, and result file
 | Index byte comparison | PASS |
 | Geometry comparison | PASS |
 | Overall strict lossless result | PASS |
+| Committed input checksum | Expected SHA-256 PASS |
 | Input checksum before/after | PASS |
 | Git status after generated outputs | Clean |
 
@@ -96,6 +101,6 @@ Input checksum before and after:
 
 ## Conclusion
 
-The sample builds and runs from a fresh checkout using only the documented toolchain and an externally supplied HOTDOG PLY. It does not depend on the previous experiment folders, old build products, hard-coded repository paths, or globally installed meshoptimizer files. Generated artifacts do not dirty the checkout.
+The sample builds and runs from a fresh checkout using only the documented toolchain and included HOTDOG PLY. It does not depend on the previous experiment folders, external input paths, old build products, hard-coded repository paths, or globally installed meshoptimizer files. Generated artifacts do not dirty the checkout.
 
 A future container test can strengthen environment isolation when a container runtime is available, but no missing dependency or undocumented build step was found in this clean-checkout verification.
