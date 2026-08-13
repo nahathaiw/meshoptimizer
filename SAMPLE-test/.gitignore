@@ -1,5 +1,6 @@
 /build/
 /output/
 /results/
+/__pycache__/
 /input/*.ply
 !/input/hotdog.ply

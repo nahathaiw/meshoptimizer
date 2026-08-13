@@ -41,7 +41,7 @@ mkdir -p "$build_dir" "$output_dir" "$results_dir"
 # program with full byte-for-byte comparisons of decoded buffers.
 sha256sum "$input" > "$results_dir/input_checksum_before.txt"
 
-printf '%s\n' '[1/3] Configuring and building the sample...'
+printf '%s\n' '[1/4] Configuring and building the sample...'
 if ! cmake -S "$sample_dir" -B "$build_dir" -DCMAKE_BUILD_TYPE=Release > "$results_dir/build.log" 2>&1; then
     cat "$results_dir/build.log" >&2
     exit 1
@@ -52,17 +52,25 @@ if ! cmake --build "$build_dir" --config Release --parallel >> "$results_dir/bui
 fi
 printf '%s\n' '      Build: PASS'
 
-printf '%s\n' '[2/3] Encoding, decoding, and validating HOTDOG...'
+printf '%s\n' '[2/4] Encoding, decoding, and validating HOTDOG in C++...'
 "$build_dir/hotdog_lossless" "$input" "$output_dir" "$results_dir" "$mode" | tee "$results_dir/console.txt"
+
+printf '\n%s\n' '[3/4] Running an independent Python/Trimesh check...'
+"$sample_dir/setup-python.sh"
+"$build_dir/python-env/bin/python" "$sample_dir/validate_trimesh.py" \
+    "$input" \
+    "$output_dir/hotdog.vertex.decoded.bin" \
+    "$output_dir/hotdog.index.decoded.bin" \
+    "$results_dir/trimesh_validation.txt" | tee -a "$results_dir/console.txt"
 
 sha256sum "$input" > "$results_dir/input_checksum_after.txt"
 before=$(cut -d' ' -f1 "$results_dir/input_checksum_before.txt")
 after=$(cut -d' ' -f1 "$results_dir/input_checksum_after.txt")
 if [[ "$before" != "$after" ]]; then
-    printf '\n[3/3] Original input unchanged: FAIL\n' | tee -a "$results_dir/console.txt" >&2
+    printf '\n[4/4] Original input unchanged: FAIL\n' | tee -a "$results_dir/console.txt" >&2
     exit 1
 fi
 
-printf '\n[3/3] Original input unchanged: PASS\n' | tee -a "$results_dir/console.txt"
+printf '\n[4/4] Original input unchanged: PASS\n' | tee -a "$results_dir/console.txt"
 printf '      SHA-256: %s\n' "$after" | tee -a "$results_dir/console.txt"
 printf '\nAll checks passed. Generated files are in SAMPLE-test/output and SAMPLE-test/results.\n' | tee -a "$results_dir/console.txt"

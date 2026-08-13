@@ -19,6 +19,8 @@ This was a **clean Git checkout on the same host operating system and toolchain*
 Compiler: g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0
 CMake: 4.2.3
 GNU Make: 4.4.1
+NumPy: 2.5.2
+Trimesh: 5.0.0
 ```
 
 ## Reproduction procedure
@@ -80,6 +82,8 @@ It remained empty because all generated build, encoded, decoded, and result file
 | Vertex byte comparison | PASS |
 | Index byte comparison | PASS |
 | Geometry comparison | PASS |
+| Independent Trimesh positions/colors/faces | PASS |
+| Independent Trimesh bounds/area/volume | PASS |
 | Overall strict lossless result | PASS |
 | Committed input checksum | Expected SHA-256 PASS |
 | Input checksum before/after | PASS |

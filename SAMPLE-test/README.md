@@ -22,11 +22,12 @@ Success ends with:
 
 ```text
 OVERALL STRICT LOSSLESS RESULT: PASS
+Overall Trimesh validation    : PASS
 Original input unchanged: PASS
 All checks passed.
 ```
 
-That command automatically builds the sample, encodes HOTDOG, reads and decodes the stored streams, validates every decoded vertex and index byte, and confirms the input checksum did not change.
+That command automatically builds the sample, encodes HOTDOG, reads and decodes the stored streams, validates every decoded vertex and index byte, performs an independent Python/Trimesh geometry check, and confirms the input checksum did not change.
 
 The console groups the result into four readable sections:
 
@@ -34,10 +35,12 @@ The console groups the result into four readable sections:
 1. INPUT       mesh counts, vertex format, quantization, optimization
 2. ENCODE      raw bytes, encoded bytes, ratio, and space saved
 3. DECODE      decoder result and return code for each stream
-4. VALIDATION  counts, exact bytes, geometry, and final lossless result
+4. VALIDATION  C++ counts, exact bytes, geometry, and strict result
+5. TRIMESH     independent positions, colors, triangles, and metrics
 ```
 
 Detailed build output is saved in `SAMPLE-test/results/build.log` instead of hiding the experiment result in compiler messages.
+First-run Python installation details are similarly saved in `SAMPLE-test/results/python-setup.log`.
 
 Useful alternatives:
 
@@ -76,6 +79,8 @@ Counts alone are not considered proof of losslessness. The decisive checks compa
 - A C++ compiler supporting C++11
 - A CMake build tool such as GNU Make or Ninja
 - `sha256sum`
+- Python 3 with the `venv` module
+- Internet access on the first run to install the pinned Python packages
 
 The verified environment used:
 
@@ -85,7 +90,7 @@ CMake 4.2.3
 GNU Make 4.4.1
 ```
 
-No global meshoptimizer installation is required. CMake builds the library directly from the parent repository.
+No global meshoptimizer, NumPy, or Trimesh installation is required. CMake builds meshoptimizer directly from the parent repository. The first run creates `SAMPLE-test/build/python-env` and installs the versions pinned in `requirements.txt`. Later runs reuse this isolated environment.
 
 ## Supported PLY layout
 
@@ -158,9 +163,10 @@ flowchart TD
     I --> K[Decode index sequence]
     J --> L[Count and byte validation]
     K --> L
-    L --> M{Every check passes?}
-    M -->|Yes| N[Strict lossless PASS]
-    M -->|No| O[Return an error]
+    L --> M[Independent Trimesh validation]
+    M --> N{Every check passes?}
+    N -->|Yes| O[Strict lossless PASS]
+    N -->|No| P[Return an error]
 ```
 
 The runner performs these commands automatically:
@@ -263,6 +269,21 @@ When `--optimize` is used, the sample sorts complete oriented index triplets and
 
 `run.sh` calculates SHA-256 before and after the program. A mismatch stops the script with an error.
 
+### Independent Python and Trimesh validation
+
+The primary lossless proof remains the C++ byte comparison because it checks every bit supplied to and returned by the codec. As a second implementation, `validate_trimesh.py`:
+
+- loads the original PLY with `process=False` so Trimesh does not repair or merge it;
+- reads the decoded 16-byte `float32 XYZ + uint8 RGBA` records with NumPy;
+- reads the decoded `uint32` triangle indices;
+- constructs a new Trimesh from the decoded buffers;
+- compares vertex positions exactly;
+- compares RGBA colors exactly;
+- compares complete oriented triangles independently of triangle order;
+- compares bounds, surface area, and volume.
+
+The independent report is saved as `SAMPLE-test/results/trimesh_validation.txt`. This check complements, rather than replaces, strict byte validation.
+
 ## Verified HOTDOG result
 
 The following result was measured using `--optimize`:
@@ -292,7 +313,8 @@ vertex_bytes_equal=PASS
 index_bytes_equal=PASS
 geometry_equal_before_after_optimization=PASS
 overall_strict_lossless=PASS
-Input checksum validation: PASS
+Overall Trimesh validation    : PASS
+Original input unchanged: PASS
 ```
 
 The verified original HOTDOG checksum was:
@@ -318,7 +340,9 @@ SAMPLE-test/output/
 SAMPLE-test/results/
 ├── build.log
 ├── console.txt
+├── python-setup.log
 ├── report.txt
+├── trimesh_validation.txt
 ├── validation.txt
 ├── input_checksum_before.txt
 └── input_checksum_after.txt
