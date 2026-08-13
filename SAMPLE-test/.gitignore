@@ -2,3 +2,4 @@
 /output/
 /results/
 /input/*.ply
+!/input/hotdog.ply

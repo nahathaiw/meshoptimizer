@@ -5,13 +5,23 @@ set -euo pipefail
 # current working directory and never depends on a developer's home path.
 sample_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
-if (( $# < 1 || $# > 2 )); then
-    printf 'Usage: %s INPUT.ply [--no-optimize]\n' "$0" >&2
+if (( $# > 2 )); then
+    printf 'Usage: %s [INPUT.ply] [--optimize|--no-optimize]\n' "$0" >&2
     exit 2
 fi
 
-input=$1
-mode=${2:---optimize}
+input="$sample_dir/input/hotdog.ply"
+mode=--optimize
+if (( $# >= 1 )); then
+    if [[ "$1" == "--optimize" || "$1" == "--no-optimize" ]]; then
+        mode=$1
+    else
+        input=$1
+    fi
+fi
+if (( $# == 2 )); then
+    mode=$2
+fi
 if [[ ! -f "$input" ]]; then
     printf 'Error: input file does not exist: %s\n' "$input" >&2
     exit 2

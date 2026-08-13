@@ -85,40 +85,46 @@ struct Vertex
 
 Polygon faces are triangulated as a fan. The HOTDOG test file already contains triangle faces.
 
-## Provide the input safely
+## Included input
 
-Do not commit the original HOTDOG file. Pass its path directly:
+The verified test mesh is included at:
 
-```bash
-./SAMPLE-test/run.sh /absolute/path/to/hotdog.ply
+```text
+SAMPLE-test/input/hotdog.ply
 ```
 
-Alternatively, place it under `SAMPLE-test/input/`. PLY files in that directory are ignored by Git:
+Its expected SHA-256 is:
 
-```bash
-./SAMPLE-test/run.sh SAMPLE-test/input/hotdog.ply
+```text
+770de889bd896117e1429b4b7e618d98ef2ca3f5d5b6d03da7492e7ab95a6b1f
 ```
 
-The runner opens the input for reading only. SHA-256 checks before and after the experiment provide an additional input-preservation check.
+The runner opens the input for reading only. SHA-256 checks before and after the experiment provide an additional preservation check. Other compatible PLY files can still be passed by path and are ignored if placed under `SAMPLE-test/input/`.
 
 ## Quick start
 
 From the repository root:
 
 ```bash
-./SAMPLE-test/run.sh /absolute/path/to/hotdog.ply
+./SAMPLE-test/run.sh
 ```
 
-The default mode is `--optimize`, so the command above is equivalent to:
+This uses the included HOTDOG input and the default `--optimize` mode. It is equivalent to:
 
 ```bash
-./SAMPLE-test/run.sh /absolute/path/to/hotdog.ply --optimize
+./SAMPLE-test/run.sh SAMPLE-test/input/hotdog.ply --optimize
 ```
 
 To encode the PLY's original triangle order without cache optimization:
 
 ```bash
-./SAMPLE-test/run.sh /absolute/path/to/hotdog.ply --no-optimize
+./SAMPLE-test/run.sh --no-optimize
+```
+
+To test another compatible file:
+
+```bash
+./SAMPLE-test/run.sh /absolute/path/to/another.ply
 ```
 
 ## What the runner does
@@ -146,11 +152,11 @@ flowchart TD
 The runner performs these commands automatically:
 
 ```bash
-sha256sum INPUT.ply
+sha256sum SAMPLE-test/input/hotdog.ply
 cmake -S SAMPLE-test -B SAMPLE-test/build -DCMAKE_BUILD_TYPE=Release
 cmake --build SAMPLE-test/build --config Release --parallel
-SAMPLE-test/build/hotdog_lossless INPUT.ply SAMPLE-test/output SAMPLE-test/results --optimize
-sha256sum INPUT.ply
+SAMPLE-test/build/hotdog_lossless SAMPLE-test/input/hotdog.ply SAMPLE-test/output SAMPLE-test/results --optimize
+sha256sum SAMPLE-test/input/hotdog.ply
 ```
 
 ## Manual build and execution
