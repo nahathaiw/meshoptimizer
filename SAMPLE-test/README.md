@@ -8,6 +8,38 @@ HOTDOG PLY input → encode → save → read → decode → validate
 
 It is intentionally small and heavily commented so the encoding, decoding, and validation steps can be studied independently. It uses meshoptimizer only; Draco is not part of this sample.
 
+## Quick start
+
+The HOTDOG input is already included. Clone the `sample` branch and run one command:
+
+```bash
+git clone --branch sample https://github.com/nahathaiw/meshoptimizer.git
+cd meshoptimizer
+./SAMPLE-test/run.sh
+```
+
+Success ends with:
+
+```text
+overall_strict_lossless=PASS
+Input checksum validation: PASS
+```
+
+That command automatically builds the sample, encodes HOTDOG, reads and decodes the stored streams, validates every decoded vertex and index byte, and confirms the input checksum did not change.
+
+Useful alternatives:
+
+```bash
+# Keep the original triangle order instead of cache-optimizing it first
+./SAMPLE-test/run.sh --no-optimize
+
+# Test another compatible binary PLY
+./SAMPLE-test/run.sh /absolute/path/to/another.ply
+
+# Remove generated build, output, and result files
+./SAMPLE-test/clean.sh
+```
+
 ## What this sample proves
 
 The sample verifies that:
@@ -42,16 +74,6 @@ GNU Make 4.4.1
 ```
 
 No global meshoptimizer installation is required. CMake builds the library directly from the parent repository.
-
-## Get the sample branch
-
-```bash
-git clone git@github.com:nahathaiw/meshoptimizer.git
-cd meshoptimizer
-git switch sample
-```
-
-If the `sample` branch has not been published yet, use the local branch where this directory was created.
 
 ## Supported PLY layout
 
@@ -101,30 +123,10 @@ Its expected SHA-256 is:
 
 The runner opens the input for reading only. SHA-256 checks before and after the experiment provide an additional preservation check. Other compatible PLY files can still be passed by path and are ignored if placed under `SAMPLE-test/input/`.
 
-## Quick start
-
-From the repository root:
-
-```bash
-./SAMPLE-test/run.sh
-```
-
-This uses the included HOTDOG input and the default `--optimize` mode. It is equivalent to:
+The no-argument command uses this included input and the default `--optimize` mode. It is equivalent to:
 
 ```bash
 ./SAMPLE-test/run.sh SAMPLE-test/input/hotdog.ply --optimize
-```
-
-To encode the PLY's original triangle order without cache optimization:
-
-```bash
-./SAMPLE-test/run.sh --no-optimize
-```
-
-To test another compatible file:
-
-```bash
-./SAMPLE-test/run.sh /absolute/path/to/another.ply
 ```
 
 ## What the runner does
